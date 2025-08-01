@@ -13,7 +13,7 @@ import OfflineIndicator from './components/OfflineIndicator'
 
 // Utils
 import { registerServiceWorker, checkOfflineStatus, addOfflineStatusListener } from './utils/registerSW'
-import { initTesseractWorker, extractTextFromImage, terminateTesseractWorker } from './utils/textExtraction'
+import { initTesseractWorker, extractTextFromImage, processImageWithAI, terminateTesseractWorker } from './utils/textExtraction'
 import { availableLanguages, tesseractLanguageMap, getDefaultLanguage, translate } from './utils/languages'
 import { generateReport, downloadReport } from './utils/reportGenerator'
 
@@ -95,7 +95,7 @@ function App() {
     setCurrentView('camera')
   }
 
-  // Process image with OCR
+  // Process image with OCR and AI
   const processImage = async () => {
     if (!imageData) return
 
@@ -105,50 +105,17 @@ function App() {
     setSummaryError(null)
 
     try {
-      const text = await extractTextFromImage(imageData, tesseractLanguageMap[language] || 'eng')
-      setExtractedText(text)
-      await generateSummary(text)
-    } catch (error) {
-      console.error('Error processing image:', error)
-      setExtractionError(error.message || 'Failed to extract text from image')
-    } finally {
-      setIsExtracting(false)
-    }
-  }
-
-  // Generate summary from extracted text
-  const generateSummary = async (text) => {
-    if (!text) return
-
-    setIsGeneratingSummary(true)
-    setSummaryError(null)
-
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      const mockSummary = {
-        interpretation: language === 'hi' 
-          ? 'यह एक ब्लड टेस्ट रिपोर्ट है जो हल्के बढ़े हुए ग्लूकोज स्तर (110 mg/dL) और सामान्य हीमोग्लोबिन (14.2 g/dL) दिखाती है।'
-          : 'This appears to be a blood test report showing slightly elevated glucose levels (110 mg/dL) and normal hemoglobin (14.2 g/dL).',
-        actionItems: language === 'hi' ? [
-          'रक्त शर्करा के स्तर की निगरानी करें',
-          'चीनी के सेवन को कम करने के लिए आहार में बदलाव की सलाह दें',
-          '3 महीने में फॉलो-अप अपॉइंटमेंट शेड्यूल करें'
-        ] : [
-          'Monitor blood glucose levels',
-          'Recommend dietary changes to reduce sugar intake',
-          'Schedule follow-up appointment in 3 months'
-        ]
-      }
-
-      setSummary(mockSummary)
+      // Use the new integrated OCR and AI processing
+      const result = await processImageWithAI(imageData, language, true)
+      setExtractedText(result.extractedText)
+      setSummary(result.summary)
       
       // Save report
       const newReport = {
         id: Date.now(),
         imageData,
-        extractedText: text,
-        summary: mockSummary,
+        extractedText: result.extractedText,
+        summary: result.summary,
         patientId: currentPatient?.id,
         createdAt: new Date().toISOString(),
         status: 'completed'
@@ -159,12 +126,14 @@ function App() {
       setCurrentView('report')
       
     } catch (error) {
-      console.error('Error generating summary:', error)
-      setSummaryError('Failed to generate summary from text')
+      console.error('Error processing image:', error)
+      setExtractionError(error.message || 'Failed to process image')
     } finally {
-      setIsGeneratingSummary(false)
+      setIsExtracting(false)
     }
   }
+
+
 
   // Handle language change
   const handleLanguageChange = (languageCode) => {
