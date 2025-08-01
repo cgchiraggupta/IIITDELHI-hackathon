@@ -1,0 +1,195 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Step-based UI flow */
+.step-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* Camera styles */
+.camera-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  background-color: #f3f4f6;
+}
+
+.camera-view {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+}
+
+.camera-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 1rem;
+}
+
+.capture-button {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 3px solid #4361ee;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.capture-button:hover {
+  transform: scale(1.05);
+}
+
+.capture-button:active {
+  transform: scale(0.95);
+}
+
+.capture-button-inner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: #4361ee;
+}
+
+/* Image preview */
+.image-preview {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  border: 2px solid #e5e7eb;
+}
+
+/* Results display */
+.results-container {
+  width: 100%;
+  margin-top: 2rem;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.original-report-container {
+  position: relative;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.original-report-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 0.5rem;
+  transition: transform 0.3s ease;
+}
+
+.original-report-image:hover {
+  transform: scale(1.02);
+}
+
+.report-summary-container {
+  padding: 0;
+  border-radius: 0.75rem;
+  background-color: transparent;
+}
+
+/* Medical report card */
+.medical-card {
+  border-radius: 0.75rem;
+  background-color: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.medical-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading spinner */
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: #4361ee;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Offline indicator */
+.offline-indicator {
+  background-color: #f72585;
+  color: white;
+  text-align: center;
+  padding: 0.5rem;
+  font-weight: 500;
+}
+
+/* Voice playback button */
+.voice-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #4cc9f0;
+  color: white;
+  border-radius: 9999px;
+  width: 3rem;
+  height: 3rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.voice-button:hover {
+  background-color: #3db8df;
+  transform: scale(1.05);
+}
+
+.voice-button:active {
+  transform: scale(0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .capture-button {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  
+  .capture-button-inner {
+    width: 2rem;
+    height: 2rem;
+  }
+}

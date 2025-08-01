@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="256" fill="#4361ee" />
+  
+  <!-- Medical Cross -->
+  <rect x="156" y="226" width="200" height="60" rx="10" fill="white" />
+  <rect x="226" y="156" width="60" height="200" rx="10" fill="white" />
+  
+  <!-- Stethoscope -->
+  <path d="M120 320C120 297.909 137.909 280 160 280H180C202.091 280 220 297.909 220 320V340C220 362.091 202.091 380 180 380H160C137.909 380 120 362.091 120 340V320Z" fill="#ffffff" />
+  <path d="M220 320H280" stroke="#ffffff" stroke-width="20" stroke-linecap="round" />
+  <path d="M280 320C280 297.909 297.909 280 320 280H340C362.091 280 380 297.909 380 320V340C380 362.091 362.091 380 340 380H320C297.909 380 280 362.091 280 340V320Z" fill="#ffffff" />
+  <path d="M170 280V240C170 184.772 214.772 140 270 140V140" stroke="#ffffff" stroke-width="20" stroke-linecap="round" />
+  <path d="M330 280V240C330 184.772 285.228 140 230 140V140" stroke="#ffffff" stroke-width="20" stroke-linecap="round" />
+</svg>

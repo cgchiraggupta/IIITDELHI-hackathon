@@ -1,0 +1,205 @@
+/**
+ * Generates a report based on the extracted text, summary, and patient information
+ * @param {Object} data The data to include in the report
+ * @param {string} data.extractedText The extracted text from the medical report
+ * @param {Object} data.summary The generated summary
+ * @param {Object} data.patientInfo The patient information
+ * @param {string} data.imageData The image data URL (optional)
+ * @returns {string} The HTML content of the report
+ */
+export const generateReport = (data) => {
+  const { extractedText, summary, patientInfo, imageData } = data
+  const date = new Date().toLocaleDateString()
+  const time = new Date().toLocaleTimeString()
+
+  // Format patient information
+  const patientInfoHtml = `
+    <div class="patient-info">
+      <h2>Patient Information</h2>
+      <table>
+        <tr>
+          <td><strong>Name:</strong></td>
+          <td>${patientInfo.name || 'Not provided'}</td>
+        </tr>
+        <tr>
+          <td><strong>Age:</strong></td>
+          <td>${patientInfo.age || 'Not provided'}</td>
+        </tr>
+        <tr>
+          <td><strong>Gender:</strong></td>
+          <td>${patientInfo.gender || 'Not provided'}</td>
+        </tr>
+        <tr>
+          <td><strong>Location:</strong></td>
+          <td>${patientInfo.location || 'Not provided'}</td>
+        </tr>
+        ${patientInfo.notes ? `
+        <tr>
+          <td><strong>Notes:</strong></td>
+          <td>${patientInfo.notes}</td>
+        </tr>` : ''}
+      </table>
+    </div>
+  `
+
+  // Format summary information
+  const summaryHtml = summary ? `
+    <div class="summary">
+      <h2>Medical Summary</h2>
+      ${summary.interpretation ? `
+      <div class="interpretation">
+        <h3>Medical Interpretation</h3>
+        <p>${summary.interpretation}</p>
+      </div>` : ''}
+      ${summary.actionItems && summary.actionItems.length > 0 ? `
+      <div class="action-items">
+        <h3>Recommended Actions</h3>
+        <ul>
+          ${summary.actionItems.map(item => `<li>${item}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+    </div>
+  ` : ''
+
+  // Format extracted text
+  const extractedTextHtml = extractedText ? `
+    <div class="extracted-text">
+      <h2>Extracted Text from Medical Report</h2>
+      <pre>${extractedText}</pre>
+    </div>
+  ` : ''
+
+  // Format image if available
+  const imageHtml = imageData ? `
+    <div class="report-image">
+      <h2>Medical Report Image</h2>
+      <img src="${imageData}" alt="Medical Report" style="max-width: 100%; height: auto;" />
+    </div>
+  ` : ''
+
+  // Create the complete HTML report
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Medical Report - ${patientInfo.name || 'Patient'} - ${date}</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 30px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #ddd;
+        }
+        .header h1 {
+          color: #4361ee;
+          margin-bottom: 5px;
+        }
+        .date-time {
+          color: #666;
+          font-size: 0.9em;
+        }
+        h2 {
+          color: #4361ee;
+          margin-top: 25px;
+          padding-bottom: 5px;
+          border-bottom: 1px solid #eee;
+        }
+        h3 {
+          color: #4361ee;
+          margin-top: 20px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 20px;
+        }
+        table td {
+          padding: 8px;
+          border-bottom: 1px solid #eee;
+        }
+        table td:first-child {
+          width: 30%;
+        }
+        .interpretation, .action-items, .extracted-text {
+          margin-bottom: 20px;
+          padding: 15px;
+          background-color: #f9f9f9;
+          border-radius: 5px;
+        }
+        .action-items ul {
+          margin: 0;
+          padding-left: 20px;
+        }
+        .action-items li {
+          margin-bottom: 5px;
+        }
+        pre {
+          white-space: pre-wrap;
+          font-family: monospace;
+          background-color: #f5f5f5;
+          padding: 10px;
+          border-radius: 5px;
+          font-size: 0.9em;
+        }
+        .footer {
+          margin-top: 40px;
+          text-align: center;
+          font-size: 0.8em;
+          color: #666;
+          padding-top: 10px;
+          border-top: 1px solid #ddd;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>Medical Report</h1>
+        <div class="date-time">Generated on ${date} at ${time}</div>
+      </div>
+      
+      ${patientInfoHtml}
+      ${summaryHtml}
+      ${extractedTextHtml}
+      ${imageHtml}
+      
+      <div class="footer">
+        <p>Generated by ASHA Health Assistant</p>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+/**
+ * Downloads the generated report as an HTML file
+ * @param {string} reportHtml The HTML content of the report
+ * @param {string} fileName The name of the file to download (without extension)
+ */
+export const downloadReport = (reportHtml, fileName = 'medical-report') => {
+  // Create a blob with the HTML content
+  const blob = new Blob([reportHtml], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  
+  // Create a temporary link element to trigger the download
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${fileName}.html`
+  document.body.appendChild(link)
+  
+  // Trigger the download and clean up
+  link.click()
+  setTimeout(() => {
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }, 100)
+}
