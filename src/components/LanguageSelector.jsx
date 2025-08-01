@@ -42,7 +42,7 @@ const LanguageSelector = ({ currentLanguage, onChangeLanguage, languages }) => {
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={toggleDropdown}
-        className="flex items-center space-x-3 px-6 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg border-2 border-white/20 backdrop-blur-sm transform hover:scale-105 active:scale-95"
+        className="flex items-center space-x-3 px-6 py-4 rounded-xl bg-gradient-to-r from-indigo-800 to-blue-900 hover:from-indigo-900 hover:to-blue-950 transition-all duration-300 shadow-lg border-2 border-white/20 backdrop-blur-sm transform hover:scale-105 active:scale-95"
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
@@ -61,10 +61,10 @@ const LanguageSelector = ({ currentLanguage, onChangeLanguage, languages }) => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-2xl z-50 py-3 border border-gray-200 transform transition-all duration-200">
+        <div className="absolute right-0 mt-3 w-56 bg-gray-900 rounded-xl shadow-2xl z-50 py-3 border border-gray-700 transform transition-all duration-200">
           {/* Header */}
-          <div className="px-4 py-2 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+          <div className="px-4 py-2 border-b border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
               Select Language
             </h3>
           </div>
@@ -82,16 +82,16 @@ const LanguageSelector = ({ currentLanguage, onChangeLanguage, languages }) => {
                 onClick={() => handleLanguageSelect(language.code)}
                 className={`block w-full text-left px-4 py-3 transition-all duration-200 ${
                   currentLanguage === language.code 
-                    ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-500' 
-                    : 'hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-green-900 to-emerald-900 border-l-4 border-green-400' 
+                    : 'hover:bg-gray-800'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className={`font-semibold ${currentLanguage === language.code ? 'text-blue-600' : 'text-gray-700'}`}>
+                  <span className={`font-semibold ${currentLanguage === language.code ? 'text-green-400' : 'text-gray-200'}`}>
                     {languageNames[language.code] || language.name}
                   </span>
                   {currentLanguage === language.code && (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   )}
