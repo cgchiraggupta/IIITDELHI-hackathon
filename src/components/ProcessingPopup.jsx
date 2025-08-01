@@ -35,28 +35,28 @@ const ProcessingPopup = ({ isVisible, currentStep, progress, onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in slide-in-from-bottom-4 duration-300 border border-gray-700">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Processing Your Report</h3>
-          <p className="text-gray-600">Please wait while we analyze your medical report...</p>
+          <h3 className="text-xl font-bold text-white mb-2">Processing Your Report</h3>
+          <p className="text-gray-300">Please wait while we analyze your medical report...</p>
         </div>
 
         {/* Progress Bar */}
         <div className="mb-6">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
+          <div className="flex justify-between text-sm text-gray-300 mb-2">
             <span>Progress</span>
             <span>{Math.round(getProgressPercentage())}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-700 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-500 ease-out"
+              className="bg-gradient-to-r from-green-400 to-emerald-500 h-2 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${getProgressPercentage()}%` }}
             ></div>
           </div>
@@ -74,19 +74,19 @@ const ProcessingPopup = ({ isVisible, currentStep, progress, onClose }) => {
                 key={step.id}
                 className={`flex items-center p-3 rounded-lg transition-all duration-300 ${
                   isActive 
-                    ? 'bg-green-50 border border-green-200' 
+                    ? 'bg-green-900/30 border border-green-500/50' 
                     : isCompleted 
-                    ? 'bg-gray-50 border border-gray-200' 
-                    : 'bg-gray-50 border border-gray-100'
+                    ? 'bg-gray-800 border border-gray-600' 
+                    : 'bg-gray-800 border border-gray-700'
                 }`}
               >
                 {/* Step Icon */}
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 transition-all duration-300 ${
                   isActive 
-                    ? 'bg-green-500 text-white animate-pulse' 
+                    ? 'bg-green-500 text-gray-900 animate-pulse' 
                     : isCompleted 
-                    ? 'bg-green-100 text-green-600' 
-                    : 'bg-gray-100 text-gray-400'
+                    ? 'bg-green-900 text-green-400' 
+                    : 'bg-gray-700 text-gray-400'
                 }`}>
                   {isCompleted ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,12 +100,12 @@ const ProcessingPopup = ({ isVisible, currentStep, progress, onClose }) => {
                 {/* Step Content */}
                 <div className="flex-1">
                   <h4 className={`font-semibold text-sm transition-colors duration-300 ${
-                    isActive ? 'text-green-800' : isCompleted ? 'text-gray-800' : 'text-gray-500'
+                    isActive ? 'text-green-400' : isCompleted ? 'text-white' : 'text-gray-400'
                   }`}>
                     {step.title}
                   </h4>
                   <p className={`text-xs transition-colors duration-300 ${
-                    isActive ? 'text-green-600' : isCompleted ? 'text-gray-600' : 'text-gray-400'
+                    isActive ? 'text-green-300' : isCompleted ? 'text-gray-300' : 'text-gray-500'
                   }`}>
                     {step.description}
                   </p>
@@ -123,12 +123,12 @@ const ProcessingPopup = ({ isVisible, currentStep, progress, onClose }) => {
         </div>
 
         {/* Additional Info */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="bg-teal-900/30 border border-teal-500/50 rounded-lg p-4 mb-6">
           <div className="flex items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-teal-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <div className="text-sm text-blue-700">
+            <div className="text-sm text-teal-300">
               <p className="font-medium mb-1">Processing Time</p>
               <p>This usually takes 10-30 seconds depending on the complexity of your medical report.</p>
             </div>

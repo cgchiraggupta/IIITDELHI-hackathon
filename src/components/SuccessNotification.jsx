@@ -20,7 +20,7 @@ const SuccessNotification = ({ isVisible, onClose }) => {
     <div className={`fixed top-4 right-4 z-50 transition-all duration-300 ${
       show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
     }`}>
-      <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg max-w-sm">
+      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-gray-900 px-6 py-4 rounded-lg shadow-lg max-w-sm border border-green-400/50">
         <div className="flex items-center">
           <div className="flex-shrink-0">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -41,7 +41,7 @@ const SuccessNotification = ({ isVisible, onClose }) => {
                 setShow(false)
                 setTimeout(onClose, 300)
               }}
-              className="inline-flex text-white hover:text-green-200 focus:outline-none"
+              className="inline-flex text-gray-700 hover:text-gray-900 focus:outline-none"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
