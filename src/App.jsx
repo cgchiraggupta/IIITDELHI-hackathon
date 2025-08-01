@@ -10,6 +10,8 @@ import SummarySection from './components/SummarySection'
 import PatientForm from './components/PatientForm'
 import LanguageSelector from './components/LanguageSelector'
 import OfflineIndicator from './components/OfflineIndicator'
+import ProcessingPopup from './components/ProcessingPopup'
+import SuccessNotification from './components/SuccessNotification'
 
 // Utils
 import { registerServiceWorker, checkOfflineStatus, addOfflineStatusListener } from './utils/registerSW'
@@ -27,12 +29,18 @@ function App() {
   const [language, setLanguage] = useState(getDefaultLanguage())
   const [currentView, setCurrentView] = useState('home')
   const [imageData, setImageData] = useState(null)
+  const [isUploaded, setIsUploaded] = useState(false)
   const [extractedText, setExtractedText] = useState(null)
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractionError, setExtractionError] = useState(null)
   const [summary, setSummary] = useState(null)
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
   const [summaryError, setSummaryError] = useState(null)
+  
+  // Processing popup state
+  const [showProcessingPopup, setShowProcessingPopup] = useState(false)
+  const [processingStep, setProcessingStep] = useState('ocr')
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   
   // Data state
   const [patients, setPatients] = useState([])
@@ -76,8 +84,9 @@ function App() {
   }, [])
 
   // Handle image capture
-  const handleCapture = (data) => {
+  const handleCapture = (data, uploaded = false) => {
     setImageData(data)
+    setIsUploaded(uploaded)
     setExtractedText(null)
     setSummary(null)
     setExtractionError(null)
@@ -88,6 +97,7 @@ function App() {
   // Handle image retake
   const handleRetake = () => {
     setImageData(null)
+    setIsUploaded(false)
     setExtractedText(null)
     setSummary(null)
     setExtractionError(null)
@@ -103,10 +113,26 @@ function App() {
     setExtractionError(null)
     setSummary(null)
     setSummaryError(null)
+    
+    // Show processing popup
+    setShowProcessingPopup(true)
+    setProcessingStep('ocr')
 
     try {
+      // Simulate OCR step
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      setProcessingStep('ai')
+      
       // Use the new integrated OCR and AI processing
       const result = await processImageWithAI(imageData, language, true)
+      
+      // Simulate final processing step
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      setProcessingStep('summary')
+      
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      setProcessingStep('completed')
+      
       setExtractedText(result.extractedText)
       setSummary(result.summary)
       
@@ -123,11 +149,18 @@ function App() {
       
       setReports(prev => [newReport, ...prev])
       setCurrentReport(newReport)
-      setCurrentView('report')
+      
+      // Close popup and navigate to report after a short delay
+      setTimeout(() => {
+        setShowProcessingPopup(false)
+        setShowSuccessNotification(true)
+        setCurrentView('report')
+      }, 2000)
       
     } catch (error) {
       console.error('Error processing image:', error)
       setExtractionError(error.message || 'Failed to process image')
+      setShowProcessingPopup(false)
     } finally {
       setIsExtracting(false)
     }
@@ -307,11 +340,12 @@ function App() {
         <h2 className="view-title">{translate('preview.title', language)}</h2>
         <p className="view-subtitle">{translate('preview.process', language)}</p>
       </div>
-      <ImagePreview 
-        imageData={imageData} 
-        onRetake={handleRetake} 
-        onProcess={processImage} 
-      />
+              <ImagePreview 
+          imageData={imageData} 
+          onRetake={handleRetake} 
+          onProcess={processImage}
+          isUploaded={isUploaded}
+        />
     </div>
   )
 
@@ -539,6 +573,24 @@ function App() {
           <span>{translate('nav.patients', language)}</span>
         </button>
       </nav>
+      
+      {/* Processing Popup */}
+      <ProcessingPopup 
+        isVisible={showProcessingPopup}
+        currentStep={processingStep}
+        onClose={() => {
+          setShowProcessingPopup(false)
+          if (currentReport) {
+            setCurrentView('report')
+          }
+        }}
+      />
+      
+      {/* Success Notification */}
+      <SuccessNotification 
+        isVisible={showSuccessNotification}
+        onClose={() => setShowSuccessNotification(false)}
+      />
     </div>
   )
 }

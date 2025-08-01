@@ -721,3 +721,70 @@
   --color-info: #3b82f6;
   --color-error: #ef4444;
 }
+
+/* Upload Interface Styles */
+.upload-option {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.upload-option:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.upload-option:active {
+  transform: translateY(-2px);
+}
+
+.file-upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  background: #f9fafb;
+  transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.file-upload-area.dragover {
+  border-color: #10b981;
+  background: #ecfdf5;
+  transform: scale(1.02);
+}
+
+/* Processing Popup Animations */
+@keyframes slide-in-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: slide-in-from-bottom 0.3s ease-out;
+}
+
+.slide-in-from-bottom-4 {
+  animation: slide-in-from-bottom 0.4s ease-out;
+}
+
+/* Progress bar animations */
+@keyframes progress-fill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--progress-width);
+  }
+}
+
+.progress-bar-fill {
+  animation: progress-fill 0.5s ease-out;
+}
