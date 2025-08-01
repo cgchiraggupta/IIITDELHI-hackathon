@@ -5,15 +5,6 @@
 export const availableLanguages = [
   { code: 'en', name: 'English' },
   { code: 'hi', name: 'हिंदी (Hindi)' },
-  { code: 'bn', name: 'বাংলা (Bengali)' },
-  { code: 'te', name: 'తెలుగు (Telugu)' },
-  { code: 'ta', name: 'தமிழ் (Tamil)' },
-  { code: 'mr', name: 'मराठी (Marathi)' },
-  { code: 'gu', name: 'ગુજરાતી (Gujarati)' },
-  { code: 'kn', name: 'ಕನ್ನಡ (Kannada)' },
-  { code: 'ml', name: 'മലയാളം (Malayalam)' },
-  { code: 'pa', name: 'ਪੰਜਾਬੀ (Punjabi)' },
-  { code: 'or', name: 'ଓଡ଼ିଆ (Odia)' },
 ]
 
 /**
@@ -23,15 +14,6 @@ export const availableLanguages = [
 export const tesseractLanguageMap = {
   'en': 'eng',
   'hi': 'hin',
-  'bn': 'ben',
-  'te': 'tel',
-  'ta': 'tam',
-  'mr': 'mar',
-  'gu': 'guj',
-  'kn': 'kan',
-  'ml': 'mal',
-  'pa': 'pan',
-  'or': 'ori',
 }
 
 /**
@@ -55,72 +37,155 @@ export const getDefaultLanguage = () => {
 export const translate = (key, language = 'en') => {
   const translations = {
     'en': {
-      'app.title': 'ASHA Health Assistant',
+      // Header
+      'header.title': 'ASHA Health Worker',
+      'header.subtitle': 'Your Digital Partner in Healthcare',
+      
+      // Dashboard
+      'dashboard.totalReports': 'Total Reports',
+      'dashboard.totalPatients': 'Total Patients',
+      'dashboard.quickActions': 'Quick Actions',
+      'dashboard.newReport': 'New Report',
+      'dashboard.viewPatients': 'View Patients',
+      'dashboard.viewReports': 'View Reports',
+      
+      // Navigation
+      'nav.home': 'Home',
+      'nav.camera': 'Camera',
+      'nav.report': 'Report',
+      'nav.patients': 'Patients',
+      
+      // Camera
       'camera.title': 'Medical Report Capture',
       'camera.open': 'Open Camera',
       'camera.noCamera': 'No camera detected',
       'camera.upload': 'Upload Image',
+      'camera.capture': 'Capture Image',
+      
+      // Preview
       'preview.title': 'Image Preview',
       'preview.retake': 'Retake',
       'preview.process': 'Process Image',
+      
+      // Text Extraction
       'extraction.title': 'Extracted Text',
       'extraction.loading': 'Processing image, please wait...',
       'extraction.error': 'Error extracting text',
+      'extraction.copy': 'Copy Text',
+      
+      // Summary
       'summary.title': 'Medical Summary',
       'summary.interpretation': 'Medical Interpretation',
       'summary.actions': 'Recommended Actions',
       'summary.loading': 'Analyzing medical report, please wait...',
       'summary.error': 'Error generating summary',
+      'summary.voice': 'Listen to Summary',
+      
+      // Patient
       'patient.title': 'Patient Information',
       'patient.name': 'Patient Name',
       'patient.age': 'Age',
       'patient.gender': 'Gender',
       'patient.location': 'Village/Location',
       'patient.notes': 'Additional Notes',
+      'patient.save': 'Save Patient Info',
+      
+      // Gender
       'gender.select': 'Select gender',
       'gender.male': 'Male',
       'gender.female': 'Female',
       'gender.other': 'Other',
-      'offline.message': 'You are currently offline. Some features may be limited.',
+      
+      // Report
       'report.generate': 'Generate Report',
       'report.download': 'Download Report',
+      
+      // Status
+      'offline.message': 'You are currently offline. Some features may be limited.',
       'update.available': 'Update Available',
       'update.refresh': 'Refresh',
+      
+      // Empty states
+      'empty.noReports': 'No reports yet',
+      'empty.noPatients': 'No patients yet',
+      'empty.startCapture': 'Start by capturing a medical report',
+      'empty.addPatient': 'Add your first patient',
     },
     'hi': {
-      'app.title': 'आशा स्वास्थ्य सहायक',
+      // Header
+      'header.title': 'आशा स्वास्थ्य कार्यकर्ता',
+      'header.subtitle': 'स्वास्थ्य सेवा में आपका डिजिटल साथी',
+      
+      // Dashboard
+      'dashboard.totalReports': 'कुल रिपोर्ट्स',
+      'dashboard.totalPatients': 'कुल मरीज़',
+      'dashboard.quickActions': 'तुरंत करें',
+      'dashboard.newReport': 'नई रिपोर्ट',
+      'dashboard.viewPatients': 'मरीज़ देखें',
+      'dashboard.viewReports': 'रिपोर्ट्स',
+      
+      // Navigation
+      'nav.home': 'होम',
+      'nav.camera': 'कैमरा',
+      'nav.report': 'रिपोर्ट',
+      'nav.patients': 'मरीज़',
+      
+      // Camera
       'camera.title': 'मेडिकल रिपोर्ट कैप्चर',
       'camera.open': 'कैमरा खोलें',
       'camera.noCamera': 'कोई कैमरा नहीं मिला',
       'camera.upload': 'छवि अपलोड करें',
+      'camera.capture': 'छवि कैप्चर करें',
+      
+      // Preview
       'preview.title': 'छवि पूर्वावलोकन',
       'preview.retake': 'फिर से लें',
       'preview.process': 'छवि प्रोसेस करें',
+      
+      // Text Extraction
       'extraction.title': 'निकाला गया टेक्स्ट',
       'extraction.loading': 'छवि प्रोसेस हो रही है, कृपया प्रतीक्षा करें...',
       'extraction.error': 'टेक्स्ट निकालने में त्रुटि',
+      'extraction.copy': 'टेक्स्ट कॉपी करें',
+      
+      // Summary
       'summary.title': 'मेडिकल सारांश',
       'summary.interpretation': 'मेडिकल व्याख्या',
       'summary.actions': 'अनुशंसित कार्रवाई',
       'summary.loading': 'मेडिकल रिपोर्ट का विश्लेषण हो रहा है, कृपया प्रतीक्षा करें...',
       'summary.error': 'सारांश बनाने में त्रुटि',
+      'summary.voice': 'सारांश सुनें',
+      
+      // Patient
       'patient.title': 'रोगी की जानकारी',
       'patient.name': 'रोगी का नाम',
       'patient.age': 'उम्र',
       'patient.gender': 'लिंग',
       'patient.location': 'गांव/स्थान',
       'patient.notes': 'अतिरिक्त नोट्स',
+      'patient.save': 'रोगी की जानकारी सहेजें',
+      
+      // Gender
       'gender.select': 'लिंग चुनें',
       'gender.male': 'पुरुष',
       'gender.female': 'महिला',
       'gender.other': 'अन्य',
-      'offline.message': 'आप वर्तमान में ऑफलाइन हैं। कुछ सुविधाएँ सीमित हो सकती हैं।',
+      
+      // Report
       'report.generate': 'रिपोर्ट बनाएं',
       'report.download': 'रिपोर्ट डाउनलोड करें',
+      
+      // Status
+      'offline.message': 'आप वर्तमान में ऑफलाइन हैं। कुछ सुविधाएँ सीमित हो सकती हैं।',
       'update.available': 'अपडेट उपलब्ध है',
       'update.refresh': 'रिफ्रेश करें',
+      
+      // Empty states
+      'empty.noReports': 'अभी तक कोई रिपोर्ट नहीं',
+      'empty.noPatients': 'अभी तक कोई मरीज़ नहीं',
+      'empty.startCapture': 'मेडिकल रिपोर्ट कैप्चर करके शुरू करें',
+      'empty.addPatient': 'अपना पहला मरीज़ जोड़ें',
     },
-    // Add more languages as needed
   }
 
   // Get the translations for the current language, or fall back to English

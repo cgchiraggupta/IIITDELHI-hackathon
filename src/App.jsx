@@ -14,7 +14,7 @@ import OfflineIndicator from './components/OfflineIndicator'
 // Utils
 import { registerServiceWorker, checkOfflineStatus, addOfflineStatusListener } from './utils/registerSW'
 import { initTesseractWorker, extractTextFromImage, terminateTesseractWorker } from './utils/textExtraction'
-import { availableLanguages, tesseractLanguageMap, getDefaultLanguage } from './utils/languages'
+import { availableLanguages, tesseractLanguageMap, getDefaultLanguage, translate } from './utils/languages'
 import { generateReport, downloadReport } from './utils/reportGenerator'
 
 function App() {
@@ -25,6 +25,7 @@ function App() {
 
   // App state
   const [language, setLanguage] = useState(getDefaultLanguage())
+  const [currentView, setCurrentView] = useState('home')
   const [imageData, setImageData] = useState(null)
   const [extractedText, setExtractedText] = useState(null)
   const [isExtracting, setIsExtracting] = useState(false)
@@ -32,13 +33,12 @@ function App() {
   const [summary, setSummary] = useState(null)
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
   const [summaryError, setSummaryError] = useState(null)
-  const [patientInfo, setPatientInfo] = useState({
-    name: '',
-    age: '',
-    gender: '',
-    location: '',
-    notes: ''
-  })
+  
+  // Data state
+  const [patients, setPatients] = useState([])
+  const [reports, setReports] = useState([])
+  const [currentPatient, setCurrentPatient] = useState(null)
+  const [currentReport, setCurrentReport] = useState(null)
 
   // Initialize Tesseract worker
   useEffect(() => {
@@ -49,37 +49,23 @@ function App() {
         console.error('Failed to initialize Tesseract worker:', error)
       }
     }
-
     initWorker()
-
-    return () => {
-      terminateTesseractWorker()
-    }
+    return () => terminateTesseractWorker()
   }, [language])
 
   // Register service worker for PWA
   useEffect(() => {
     const sw = registerServiceWorker({
-      onNeedRefresh: () => {
-        setUpdateAvailable(true);
-      },
-      onOfflineReady: () => {
-        // Optionally show a confirmation that the app is ready for offline use
-        console.log('App is ready for offline use');
-      },
-      onRegistrationError: (error) => {
-        console.error('Service worker registration failed:', error);
-      }
-    });
-    
-    setUpdateSW(sw);
-
+      onNeedRefresh: () => setUpdateAvailable(true),
+      onOfflineReady: () => console.log('App is ready for offline use'),
+      onRegistrationError: (error) => console.error('Service worker registration failed:', error)
+    })
+    setUpdateSW(sw)
     return () => {
-      // Clean up update check interval if it exists
       if (window.__updateServiceWorkerInterval) {
-        clearInterval(window.__updateServiceWorkerInterval);
+        clearInterval(window.__updateServiceWorkerInterval)
       }
-    };
+    }
   }, [])
 
   // Check offline status
@@ -92,11 +78,11 @@ function App() {
   // Handle image capture
   const handleCapture = (data) => {
     setImageData(data)
-    // Reset extraction and summary when new image is captured
     setExtractedText(null)
     setSummary(null)
     setExtractionError(null)
     setSummaryError(null)
+    setCurrentView('preview')
   }
 
   // Handle image retake
@@ -106,6 +92,7 @@ function App() {
     setSummary(null)
     setExtractionError(null)
     setSummaryError(null)
+    setCurrentView('camera')
   }
 
   // Process image with OCR
@@ -120,7 +107,7 @@ function App() {
     try {
       const text = await extractTextFromImage(imageData, tesseractLanguageMap[language] || 'eng')
       setExtractedText(text)
-      generateSummary(text)
+      await generateSummary(text)
     } catch (error) {
       console.error('Error processing image:', error)
       setExtractionError(error.message || 'Failed to extract text from image')
@@ -130,36 +117,53 @@ function App() {
   }
 
   // Generate summary from extracted text
-  // In a real app, this would call an AI service
-  const generateSummary = (text) => {
+  const generateSummary = async (text) => {
     if (!text) return
 
     setIsGeneratingSummary(true)
     setSummaryError(null)
 
-    // Simulate API call with timeout
-    setTimeout(() => {
-      try {
-        // Mock summary generation
-        // In a real app, this would be replaced with an actual API call
-        const mockSummary = {
-          interpretation: 'This appears to be a blood test report showing slightly elevated glucose levels (110 mg/dL) and normal hemoglobin (14.2 g/dL). Other parameters are within normal range.',
-          actionItems: [
-            'Monitor blood glucose levels',
-            'Recommend dietary changes to reduce sugar intake',
-            'Schedule follow-up appointment in 3 months',
-            'Provide patient education on diabetes prevention'
-          ]
-        }
-
-        setSummary(mockSummary)
-      } catch (error) {
-        console.error('Error generating summary:', error)
-        setSummaryError('Failed to generate summary from text')
-      } finally {
-        setIsGeneratingSummary(false)
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      const mockSummary = {
+        interpretation: language === 'hi' 
+          ? 'यह एक ब्लड टेस्ट रिपोर्ट है जो हल्के बढ़े हुए ग्लूकोज स्तर (110 mg/dL) और सामान्य हीमोग्लोबिन (14.2 g/dL) दिखाती है।'
+          : 'This appears to be a blood test report showing slightly elevated glucose levels (110 mg/dL) and normal hemoglobin (14.2 g/dL).',
+        actionItems: language === 'hi' ? [
+          'रक्त शर्करा के स्तर की निगरानी करें',
+          'चीनी के सेवन को कम करने के लिए आहार में बदलाव की सलाह दें',
+          '3 महीने में फॉलो-अप अपॉइंटमेंट शेड्यूल करें'
+        ] : [
+          'Monitor blood glucose levels',
+          'Recommend dietary changes to reduce sugar intake',
+          'Schedule follow-up appointment in 3 months'
+        ]
       }
-    }, 2000) // Simulate 2 second delay for API call
+
+      setSummary(mockSummary)
+      
+      // Save report
+      const newReport = {
+        id: Date.now(),
+        imageData,
+        extractedText: text,
+        summary: mockSummary,
+        patientId: currentPatient?.id,
+        createdAt: new Date().toISOString(),
+        status: 'completed'
+      }
+      
+      setReports(prev => [newReport, ...prev])
+      setCurrentReport(newReport)
+      setCurrentView('report')
+      
+    } catch (error) {
+      console.error('Error generating summary:', error)
+      setSummaryError('Failed to generate summary from text')
+    } finally {
+      setIsGeneratingSummary(false)
+    }
   }
 
   // Handle language change
@@ -167,9 +171,19 @@ function App() {
     setLanguage(languageCode)
   }
 
-  // Handle patient info update
-  const handleUpdatePatientInfo = (info) => {
-    setPatientInfo(info)
+  // Handle patient creation/update
+  const handlePatientUpdate = (patientData) => {
+    if (patientData.id) {
+      setPatients(prev => prev.map(p => p.id === patientData.id ? patientData : p))
+    } else {
+      const newPatient = {
+        ...patientData,
+        id: Date.now(),
+        createdAt: new Date().toISOString()
+      }
+      setPatients(prev => [newPatient, ...prev])
+    }
+    setCurrentPatient(patientData)
   }
 
   // Handle report generation and download
@@ -177,11 +191,11 @@ function App() {
     const reportHtml = generateReport({
       extractedText,
       summary,
-      patientInfo,
+      patientInfo: currentPatient,
       imageData
     })
 
-    const fileName = `medical-report-${patientInfo.name ? patientInfo.name.replace(/\s+/g, '-').toLowerCase() : 'patient'}-${new Date().toISOString().split('T')[0]}`
+    const fileName = `medical-report-${currentPatient?.name ? currentPatient.name.replace(/\s+/g, '-').toLowerCase() : 'patient'}-${new Date().toISOString().split('T')[0]}`
     downloadReport(reportHtml, fileName)
   }
 
@@ -192,24 +206,312 @@ function App() {
     }
   }
 
-  // Play voice summary (mock implementation)
+  // Play voice summary
   const handlePlayVoice = () => {
     if (!summary || !summary.interpretation) return
-
-    // Use the Web Speech API for text-to-speech
     const speech = new SpeechSynthesisUtterance(summary.interpretation)
-    speech.lang = language === 'hi' ? 'hi-IN' : 'en-US' // Set language
+    speech.lang = language === 'hi' ? 'hi-IN' : 'en-US'
     window.speechSynthesis.speak(speech)
   }
+
+  // Render Home Dashboard
+  const renderHomeDashboard = () => (
+    <div className="dashboard-container">
+      {/* Stats Cards */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon reports-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div className="stat-number">{reports.length}</div>
+          <div className="stat-label">{translate('dashboard.totalReports', language)}</div>
+        </div>
+        
+        <div className="stat-card">
+          <div className="stat-icon patients-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+          </div>
+          <div className="stat-number">{patients.length}</div>
+          <div className="stat-label">{translate('dashboard.totalPatients', language)}</div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="quick-actions">
+        <h2 className="section-title">{translate('dashboard.quickActions', language)}</h2>
+        
+        <div className="action-grid">
+          <button 
+            className="action-card"
+            onClick={() => setCurrentView('camera')}
+          >
+            <div className="action-icon camera-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div className="action-content">
+              <div className="action-title">{translate('dashboard.newReport', language)}</div>
+              <div className="action-subtitle">{translate('camera.title', language)}</div>
+            </div>
+          </button>
+
+          <button 
+            className="action-card"
+            onClick={() => setCurrentView('patients')}
+          >
+            <div className="action-icon patients-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+              </svg>
+            </div>
+            <div className="action-content">
+              <div className="action-title">{translate('dashboard.viewPatients', language)}</div>
+              <div className="action-subtitle">{translate('patient.title', language)}</div>
+            </div>
+          </button>
+
+          <button 
+            className="action-card"
+            onClick={() => setCurrentView('report')}
+          >
+            <div className="action-icon reports-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div className="action-content">
+              <div className="action-title">{translate('dashboard.viewReports', language)}</div>
+              <div className="action-subtitle">{translate('summary.title', language)}</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      {reports.length > 0 && (
+        <div className="recent-activity">
+          <h2 className="section-title">{language === 'hi' ? 'हाल की गतिविधियां' : 'Recent Activity'}</h2>
+          <div className="activity-list">
+            {reports.slice(0, 3).map(report => (
+              <div key={report.id} className="activity-item" onClick={() => {
+                setCurrentReport(report)
+                setCurrentView('report')
+              }}>
+                <div className="activity-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div className="activity-content">
+                  <div className="activity-title">{language === 'hi' ? 'मेडिकल रिपोर्ट विश्लेषण' : 'Medical Report Analysis'}</div>
+                  <div className="activity-time">{new Date(report.createdAt).toLocaleDateString()}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  // Render Camera View
+  const renderCameraView = () => (
+    <div className="view-container">
+      <div className="view-header">
+        <h2 className="view-title">{translate('nav.camera', language)}</h2>
+        <p className="view-subtitle">{translate('camera.title', language)}</p>
+      </div>
+      <CameraCapture onCapture={handleCapture} />
+    </div>
+  )
+
+  // Render Preview View
+  const renderPreviewView = () => (
+    <div className="view-container">
+      <div className="view-header">
+        <h2 className="view-title">{translate('preview.title', language)}</h2>
+        <p className="view-subtitle">{translate('preview.process', language)}</p>
+      </div>
+      <ImagePreview 
+        imageData={imageData} 
+        onRetake={handleRetake} 
+        onProcess={processImage} 
+      />
+    </div>
+  )
+
+  // Render Report View
+  const renderReportView = () => {
+    if (!currentReport && !imageData) {
+      return (
+        <div className="view-container">
+          <div className="view-header">
+            <h2 className="view-title">{translate('nav.report', language)}</h2>
+            <p className="view-subtitle">{translate('empty.noReports', language)}</p>
+          </div>
+          <div className="empty-state">
+            <div className="empty-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <p className="empty-text">{translate('empty.startCapture', language)}</p>
+            <button 
+              className="btn btn-primary btn-lg"
+              onClick={() => setCurrentView('camera')}
+            >
+              {translate('dashboard.newReport', language)}
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    const report = currentReport || { imageData, extractedText, summary }
+    
+    return (
+      <div className="view-container">
+        <div className="view-header">
+          <h2 className="view-title">{translate('summary.title', language)}</h2>
+          <p className="view-subtitle">{translate('summary.interpretation', language)}</p>
+        </div>
+        
+        {isExtracting && (
+          <div className="processing-container">
+            <div className="spinner-large mb-6"></div>
+            <h3 className="text-2xl font-bold mb-4">{translate('extraction.loading', language)}</h3>
+            <p className="text-lg text-gray-600">{translate('summary.loading', language)}</p>
+          </div>
+        )}
+
+        {report.extractedText && !extractionError && (
+          <div className="report-content">
+            <div className="report-grid">
+              <div className="report-section">
+                <h3 className="section-title">{translate('preview.title', language)}</h3>
+                <div className="image-container">
+                  <img src={report.imageData} alt="Medical report" className="report-image" />
+                </div>
+                <button onClick={handleRetake} className="btn btn-secondary w-full">
+                  {translate('preview.retake', language)}
+                </button>
+              </div>
+              
+              <div className="report-section">
+                <TextExtraction 
+                  extractedText={report.extractedText} 
+                  isLoading={false} 
+                  error={extractionError} 
+                />
+              </div>
+              
+              <div className="report-section">
+                <SummarySection 
+                  summary={report.summary} 
+                  isLoading={isGeneratingSummary} 
+                  error={summaryError} 
+                  onPlayVoice={handlePlayVoice} 
+                />
+              </div>
+              
+              <div className="report-section">
+                <PatientForm 
+                  patientInfo={currentPatient || {}} 
+                  onUpdatePatientInfo={handlePatientUpdate} 
+                />
+              </div>
+              
+              {report.summary && (
+                <div className="report-section">
+                  <div className="action-buttons">
+                    <button onClick={handleGenerateReport} className="btn btn-primary btn-lg w-full">
+                      {translate('report.download', language)}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Render Patients View
+  const renderPatientsView = () => (
+    <div className="view-container">
+      <div className="view-header">
+        <h2 className="view-title">{translate('nav.patients', language)}</h2>
+        <p className="view-subtitle">{translate('patient.title', language)}</p>
+      </div>
+      
+      {patients.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+          </div>
+          <p className="empty-text">{translate('empty.noPatients', language)}</p>
+        </div>
+      ) : (
+        <div className="patients-list">
+          {patients.map(patient => (
+            <div key={patient.id} className="patient-card" onClick={() => setCurrentPatient(patient)}>
+              <div className="patient-avatar">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div className="patient-info">
+                <div className="patient-name">{patient.name || 'Unknown'}</div>
+                <div className="patient-details">
+                  {patient.age && `${patient.age} years`} • {patient.gender || 'Not specified'}
+                </div>
+                <div className="patient-location">{patient.location || 'Location not specified'}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      <button 
+        className="btn btn-primary btn-lg w-full mt-4"
+        onClick={() => setCurrentPatient({})}
+      >
+        {translate('patient.save', language)}
+      </button>
+    </div>
+  )
 
   return (
     <div className="app-container">
       <OfflineIndicator isOffline={isOffline} />
       
-      <Header />
+      <Header language={language} />
       
-      <main className="container mx-auto px-4 py-6 flex-grow">
-        <div className="flex justify-end mb-4">
+      <main className="main-content">
+        {updateAvailable && (
+          <div className="update-notification">
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <p className="font-semibold">{translate('update.available', language)}</p>
+            </div>
+            <button onClick={handleUpdate} className="btn btn-primary btn-sm">
+                              {translate('update.refresh', language)}
+            </button>
+          </div>
+        )}
+
+        <div className="language-selector-container">
           <LanguageSelector 
             currentLanguage={language} 
             onChangeLanguage={handleLanguageChange} 
@@ -217,135 +519,57 @@ function App() {
           />
         </div>
 
-        {updateAvailable && (
-          <div className="bg-primary/10 text-primary p-4 rounded-lg mb-6 flex justify-between items-center">
-            <p className="font-medium">A new version is available!</p>
-            <button 
-              onClick={handleUpdate}
-              className="btn btn-primary btn-sm"
-            >
-              Refresh
-            </button>
-          </div>
-        )}
-
-        {/* Step-based UI flow */}
-        <div className="flex flex-col">
-          {/* Step 1: Scan Medical Report */}
-          {!imageData && (
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-6">Scan Your Medical Report</h2>
-              <p className="text-gray-600 mb-8">Take a clear photo of your medical report to get an instant analysis</p>
-              <CameraCapture onCapture={handleCapture} />
-            </div>
-          )}
-
-          {/* Step 2: Preview and Process */}
-          {imageData && !extractedText && !isExtracting && (
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-6">Confirm Your Medical Report</h2>
-              <p className="text-gray-600 mb-8">Make sure the image is clear and readable</p>
-              <ImagePreview 
-                imageData={imageData} 
-                onRetake={handleRetake} 
-                onProcess={processImage} 
-              />
-            </div>
-          )}
-
-          {/* Step 3: Processing Indicator */}
-          {isExtracting && (
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-6">Analyzing Your Report</h2>
-              <div className="flex flex-col items-center justify-center p-8">
-                <div className="spinner mb-4"></div>
-                <p className="text-gray-600">Processing your medical report, please wait...</p>
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Results Display */}
-          {extractedText && !extractionError && (
-            <div className="results-container">
-              <h2 className="text-2xl font-bold mb-6 text-center">Medical Report Analysis</h2>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Left Column: Original Image and Text */}
-                <div className="lg:col-span-5">
-                  <div className="original-report-container">
-                    <div className="medical-card mb-6">
-                      <h3 className="text-lg font-semibold mb-4">Original Report</h3>
-                      <div className="relative rounded-lg overflow-hidden shadow-md mb-4">
-                        <img 
-                          src={imageData} 
-                          alt="Medical report" 
-                          className="original-report-image w-full" 
-                        />
-                      </div>
-                      <button 
-                        onClick={handleRetake} 
-                        className="btn btn-secondary w-full flex items-center justify-center"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                        </svg>
-                        Scan Another Report
-                      </button>
-                    </div>
-                    
-                    <div className="medical-card">
-                      <TextExtraction 
-                        extractedText={extractedText} 
-                        isLoading={false} 
-                        error={extractionError} 
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column: Summary and Patient Info */}
-                <div className="lg:col-span-7 report-summary-container">
-                  {/* Summary Section */}
-                  <SummarySection 
-                    summary={summary} 
-                    isLoading={isGeneratingSummary || (!summary && !summaryError)} 
-                    error={summaryError} 
-                    onPlayVoice={handlePlayVoice} 
-                  />
-
-                  {/* Patient Form */}
-                  <div className="medical-card mb-6 mt-6">
-                    <PatientForm 
-                      patientInfo={patientInfo} 
-                      onUpdatePatientInfo={handleUpdatePatientInfo} 
-                    />
-                  </div>
-
-                  {/* Download Report Button */}
-                  {summary && (
-                    <div className="medical-card p-6 text-center">
-                      <button 
-                        onClick={handleGenerateReport} 
-                        className="btn btn-primary btn-lg w-full max-w-md mx-auto flex items-center justify-center"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
-                        </svg>
-                        Download Medical Report
-                      </button>
-                    </div>
-                  )}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Main Content */}
+        {currentView === 'home' && renderHomeDashboard()}
+        {currentView === 'camera' && renderCameraView()}
+        {currentView === 'preview' && renderPreviewView()}
+        {currentView === 'report' && renderReportView()}
+        {currentView === 'patients' && renderPatientsView()}
       </main>
 
-      <footer className="bg-gray-100 py-4 text-center text-gray-600 text-sm">
-        <div className="container mx-auto px-4">
-          <p>ASHA Health Assistant &copy; {new Date().getFullYear()}</p>
-        </div>
-      </footer>
+      {/* Bottom Navigation */}
+      <nav className="bottom-navigation">
+        <button 
+          className={`nav-item ${currentView === 'home' ? 'active' : ''}`}
+          onClick={() => setCurrentView('home')}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <span>{translate('nav.home', language)}</span>
+        </button>
+        
+        <button 
+          className={`nav-item ${currentView === 'camera' ? 'active' : ''}`}
+          onClick={() => setCurrentView('camera')}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span>{translate('nav.camera', language)}</span>
+        </button>
+        
+        <button 
+          className={`nav-item ${currentView === 'report' ? 'active' : ''}`}
+          onClick={() => setCurrentView('report')}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>{translate('nav.report', language)}</span>
+        </button>
+        
+        <button 
+          className={`nav-item ${currentView === 'patients' ? 'active' : ''}`}
+          onClick={() => setCurrentView('patients')}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+          </svg>
+          <span>{translate('nav.patients', language)}</span>
+        </button>
+      </nav>
     </div>
   )
 }
