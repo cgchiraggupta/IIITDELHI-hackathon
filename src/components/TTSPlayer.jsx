@@ -45,7 +45,7 @@ function TTSPlayer({ text, sourceLanguage = 'en', onTranslationComplete }) {
       console.log('Text:', text.substring(0, 100) + '...')
       console.log('Target language:', selectedLanguage)
       
-      const response = await fetch('/api/translate-tts', {
+      const response = await fetch('http://localhost:3001/api/translate-tts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

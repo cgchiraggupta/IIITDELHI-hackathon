@@ -618,7 +618,7 @@ function App() {
               {report.summary && (
                 <TTSPlayer 
                   text={report.summary.interpretation}
-                  sourceLanguage={language}
+                  sourceLanguage="en"
                   onTranslationComplete={handleTranslationComplete}
                 />
               )}

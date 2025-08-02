@@ -545,6 +545,11 @@ Action Items: [suggestions for action]`
   }
 })
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' })
+})
+
 // Serve the React app for all other routes
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'))
