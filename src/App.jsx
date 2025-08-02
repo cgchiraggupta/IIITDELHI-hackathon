@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import './App.css'
 
 // Components
@@ -12,6 +13,11 @@ import LanguageSelector from './components/LanguageSelector'
 import OfflineIndicator from './components/OfflineIndicator'
 import ProcessingPopup from './components/ProcessingPopup'
 import SuccessNotification from './components/SuccessNotification'
+import TTSPlayer from './components/TTSPlayer'
+import CollaborationPanel from './components/CollaborationPanel'
+import EmergencyAlert from './components/EmergencyAlert'
+import AnalyticsDashboard from './components/AnalyticsDashboard'
+import VoiceCommands from './components/VoiceCommands'
 
 // Utils
 import { registerServiceWorker, checkOfflineStatus, addOfflineStatusListener } from './utils/registerSW'
@@ -47,6 +53,13 @@ function App() {
   const [reports, setReports] = useState([])
   const [currentPatient, setCurrentPatient] = useState(null)
   const [currentReport, setCurrentReport] = useState(null)
+  
+  // TTS state
+  const [translatedSummary, setTranslatedSummary] = useState(null)
+  
+  // New features state
+  const [showAnalytics, setShowAnalytics] = useState(false)
+  const [showVoiceCommands, setShowVoiceCommands] = useState(false)
 
   // Initialize Tesseract worker
   useEffect(() => {
@@ -208,7 +221,7 @@ function App() {
     }
   }
 
-  // Play voice summary
+  // Play voice summary (legacy function - now using TTSPlayer component)
   const handlePlayVoice = () => {
     if (!summary || !summary.interpretation) return
     const speech = new SpeechSynthesisUtterance(summary.interpretation)
@@ -216,40 +229,130 @@ function App() {
     window.speechSynthesis.speak(speech)
   }
 
+  // Handle translation completion
+  const handleTranslationComplete = (result) => {
+    console.log('Translation completed:', result)
+    setTranslatedSummary(result)
+  }
+
+  // Handle voice commands
+  const handleVoiceCommand = (command) => {
+    switch (command) {
+      case 'newReport':
+        setCurrentView('camera')
+        break
+      case 'captureImage':
+        setCurrentView('camera')
+        break
+      case 'processReport':
+        if (imageData) processImage()
+        break
+      case 'analyze':
+        if (imageData) processImage()
+        break
+      case 'goHome':
+        setCurrentView('home')
+        break
+      case 'showPatients':
+        setCurrentView('patients')
+        break
+      case 'showReports':
+        setCurrentView('report')
+        break
+      case 'emergency':
+        // Emergency functionality would be implemented here
+        console.log('Emergency command received')
+        break
+      case 'help':
+        // Show help modal or guide
+        console.log('Help command received')
+        break
+      default:
+        console.log('Unknown command:', command)
+    }
+  }
+
   // Render Home Dashboard
   const renderHomeDashboard = () => (
-    <div className="dashboard-container">
+    <motion.div 
+      className="dashboard-container"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Stats Cards */}
-      <div className="stats-grid">
-        <div className="stat-card">
+      <motion.div 
+        className="stats-grid"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <motion.div 
+          className="stat-card"
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
           <div className="stat-icon reports-icon">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <div className="stat-number">{reports.length}</div>
+          <motion.div 
+            className="stat-number"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+          >
+            {reports.length}
+          </motion.div>
           <div className="stat-label">{translate('dashboard.totalReports', language)}</div>
-        </div>
+        </motion.div>
         
-        <div className="stat-card">
+        <motion.div 
+          className="stat-card"
+          whileHover={{ scale: 1.05, y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
           <div className="stat-icon patients-icon">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
             </svg>
           </div>
-          <div className="stat-number">{patients.length}</div>
+          <motion.div 
+            className="stat-number"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+          >
+            {patients.length}
+          </motion.div>
           <div className="stat-label">{translate('dashboard.totalPatients', language)}</div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Quick Actions */}
-      <div className="quick-actions">
+      <motion.div 
+        className="quick-actions"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
         <h2 className="section-title">{translate('dashboard.quickActions', language)}</h2>
         
-        <div className="action-grid">
-          <button 
+        <motion.div 
+          className="action-grid"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <motion.button 
             className="action-card"
             onClick={() => setCurrentView('camera')}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 300 }}
           >
             <div className="action-icon camera-icon">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -261,11 +364,14 @@ function App() {
               <div className="action-title">{translate('dashboard.newReport', language)}</div>
               <div className="action-subtitle">{translate('camera.title', language)}</div>
             </div>
-          </button>
+          </motion.button>
 
-          <button 
+          <motion.button 
             className="action-card"
             onClick={() => setCurrentView('patients')}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 300 }}
           >
             <div className="action-icon patients-icon">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -276,11 +382,14 @@ function App() {
               <div className="action-title">{translate('dashboard.viewPatients', language)}</div>
               <div className="action-subtitle">{translate('patient.title', language)}</div>
             </div>
-          </button>
+          </motion.button>
 
-          <button 
+          <motion.button 
             className="action-card"
             onClick={() => setCurrentView('report')}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 300 }}
           >
             <div className="action-icon reports-icon">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -291,7 +400,43 @@ function App() {
               <div className="action-title">{translate('dashboard.viewReports', language)}</div>
               <div className="action-subtitle">{translate('summary.title', language)}</div>
             </div>
-          </button>
+          </motion.button>
+
+          <motion.button 
+            className="action-card"
+            onClick={() => setShowAnalytics(!showAnalytics)}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <div className="action-icon analytics-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <div className="action-content">
+              <div className="action-title">Analytics</div>
+              <div className="action-subtitle">View insights & trends</div>
+            </div>
+          </motion.button>
+
+          <motion.button 
+            className="action-card"
+            onClick={() => setShowVoiceCommands(!showVoiceCommands)}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <div className="action-icon voice-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </div>
+            <div className="action-content">
+              <div className="action-title">Voice Commands</div>
+              <div className="action-subtitle">Hands-free operation</div>
+            </div>
+          </motion.button>
         </div>
       </div>
 
@@ -319,6 +464,41 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Analytics Dashboard */}
+      <AnimatePresence>
+        {showAnalytics && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <AnalyticsDashboard 
+              reports={reports} 
+              patients={patients} 
+              language={language} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Voice Commands */}
+      <AnimatePresence>
+        {showVoiceCommands && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <VoiceCommands 
+              onCommand={handleVoiceCommand} 
+              language={language} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 
@@ -417,11 +597,31 @@ function App() {
               <div className="report-section">
                 <SummarySection 
                   summary={report.summary} 
-                  isLoading={isGeneratingSummary} 
-                  error={summaryError} 
                   onPlayVoice={handlePlayVoice} 
                 />
               </div>
+              
+              {/* Emergency Alert System */}
+              <EmergencyAlert 
+                extractedText={report.extractedText}
+                summary={report.summary}
+                language={language}
+              />
+              
+              {/* Collaboration Panel */}
+              <CollaborationPanel 
+                report={report}
+                language={language}
+              />
+              
+              {/* TTS Player */}
+              {report.summary && (
+                <TTSPlayer 
+                  text={report.summary.interpretation}
+                  sourceLanguage={language}
+                  onTranslationComplete={handleTranslationComplete}
+                />
+              )}
               
               <div className="report-section">
                 <PatientForm 
@@ -494,7 +694,12 @@ function App() {
   )
 
   return (
-    <div className="app-container">
+    <motion.div 
+      className="app-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <OfflineIndicator isOffline={isOffline} />
       
       <Header language={language} />
@@ -523,55 +728,124 @@ function App() {
         </div>
 
         {/* Main Content */}
-        {currentView === 'home' && renderHomeDashboard()}
-        {currentView === 'camera' && renderCameraView()}
-        {currentView === 'preview' && renderPreviewView()}
-        {currentView === 'report' && renderReportView()}
-        {currentView === 'patients' && renderPatientsView()}
+        <AnimatePresence mode="wait">
+          {currentView === 'home' && (
+            <motion.div
+              key="home"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderHomeDashboard()}
+            </motion.div>
+          )}
+          {currentView === 'camera' && (
+            <motion.div
+              key="camera"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderCameraView()}
+            </motion.div>
+          )}
+          {currentView === 'preview' && (
+            <motion.div
+              key="preview"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderPreviewView()}
+            </motion.div>
+          )}
+          {currentView === 'report' && (
+            <motion.div
+              key="report"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderReportView()}
+            </motion.div>
+          )}
+          {currentView === 'patients' && (
+            <motion.div
+              key="patients"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderPatientsView()}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="bottom-navigation">
-        <button 
+      <motion.nav 
+        className="bottom-navigation"
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        <motion.button 
           className={`nav-item ${currentView === 'home' ? 'active' : ''}`}
           onClick={() => setCurrentView('home')}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 300 }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           <span>{translate('nav.home', language)}</span>
-        </button>
+        </motion.button>
         
-        <button 
+        <motion.button 
           className={`nav-item ${currentView === 'camera' ? 'active' : ''}`}
           onClick={() => setCurrentView('camera')}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 300 }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <span>{translate('nav.camera', language)}</span>
-        </button>
+        </motion.button>
         
-        <button 
+        <motion.button 
           className={`nav-item ${currentView === 'report' ? 'active' : ''}`}
           onClick={() => setCurrentView('report')}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 300 }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <span>{translate('nav.report', language)}</span>
-        </button>
+        </motion.button>
         
-        <button 
+        <motion.button 
           className={`nav-item ${currentView === 'patients' ? 'active' : ''}`}
           onClick={() => setCurrentView('patients')}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 300 }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
           </svg>
           <span>{translate('nav.patients', language)}</span>
-        </button>
+        </motion.button>
       </nav>
       
       {/* Processing Popup */}

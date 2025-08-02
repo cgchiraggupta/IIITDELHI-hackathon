@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Test</title>
+    <script type="module">
+        import { sarvamLanguages } from './src/utils/sarvamService.js';
+        
+        console.log('=== Test Page Debug ===');
+        console.log('sarvamLanguages imported:', sarvamLanguages);
+        console.log('sarvamLanguages length:', sarvamLanguages?.length);
+        console.log('sarvamLanguages type:', typeof sarvamLanguages);
+        console.log('sarvamLanguages is array:', Array.isArray(sarvamLanguages));
+        
+        if (sarvamLanguages && Array.isArray(sarvamLanguages)) {
+            console.log('All languages:');
+            sarvamLanguages.forEach((lang, index) => {
+                console.log(`${index + 1}. ${lang.code}: ${lang.name}`);
+            });
+        }
+        console.log('=== End Test Debug ===');
+    </script>
+</head>
+<body>
+    <h1>TTS Test Page</h1>
+    <p>Check the browser console for debug information.</p>
+</body>
+</html> 

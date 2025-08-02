@@ -4,6 +4,7 @@ import cors from 'cors'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { SarvamAIClient } from 'sarvamai'
 import axios from 'axios'
 import FormData from 'form-data'
 
@@ -29,8 +30,14 @@ const upload = multer({
 // API Keys
 const OCR_API_KEY = 'K84125832788957'
 const GEMINI_API_KEY = 'AIzaSyC5CqcZww_dEKXlH4G6seq8H0p-RZC5si0'
+const SARVAM_API_KEY = 'sk_sb5gdo6f_zbutFjWzkn02WwpwkZUmiNy9'
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
+
+// Initialize Sarvam AI client
+const sarvamClient = new SarvamAIClient({
+  apiSubscriptionKey: SARVAM_API_KEY
+})
 
 // OCR API endpoint
 app.post('/api/ocr', upload.single('file'), async (req, res) => {
@@ -186,6 +193,220 @@ Action Items: [suggestions for action]`
     console.error('AI Summary error:', error)
     res.status(500).json({
       error: `AI summary generation failed: ${error.message}`
+    })
+  }
+})
+
+// Translation endpoint
+app.post('/api/translate', async (req, res) => {
+  try {
+    const { text, sourceLanguage = 'en', targetLanguage = 'hi' } = req.body
+
+    if (!text) {
+      return res.status(400).json({ error: 'No text provided' })
+    }
+
+    console.log('Translating text:', text.substring(0, 100) + '...')
+    console.log('From:', sourceLanguage, 'To:', targetLanguage)
+
+    // Use Gemini AI for translation
+    const modelNames = ['gemini-1.5-flash', 'gemini-1.5-pro']
+    let translatedText = ''
+    let lastError = null
+
+    for (const modelName of modelNames) {
+      try {
+        console.log(`Trying Gemini model for translation: ${modelName}`)
+        const model = genAI.getGenerativeModel({ model: modelName })
+
+        const prompt = `Translate the following text from ${sourceLanguage} to ${targetLanguage}. 
+        Only provide the translated text without any additional explanations or formatting.
+
+        Text to translate:
+        ${text}
+
+        Translated text:`
+
+        const geminiResult = await model.generateContent(prompt)
+        translatedText = await geminiResult.response.text()
+        console.log(`Translation completed with ${modelName}`)
+        break
+      } catch (error) {
+        console.error(`Translation failed with ${modelName}:`, error.message)
+        lastError = error
+        continue
+      }
+    }
+
+    if (!translatedText) {
+      return res.status(500).json({
+        error: 'Translation failed for all models'
+      })
+    }
+
+    res.json({
+      originalText: text,
+      translatedText: translatedText.trim(),
+      sourceLanguage,
+      targetLanguage
+    })
+  } catch (error) {
+    console.error('Translation error:', error)
+    res.status(500).json({
+      error: `Translation failed: ${error.message}`
+    })
+  }
+})
+
+// Text-to-Speech endpoint
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { text, targetLanguageCode = 'hi-IN', options = {} } = req.body
+
+    if (!text) {
+      return res.status(400).json({ error: 'No text provided' })
+    }
+
+    console.log('Converting text to speech...')
+    console.log('Text:', text.substring(0, 100) + '...')
+    console.log('Target language:', targetLanguageCode)
+
+    const defaultOptions = {
+      speaker: 'anushka',
+      pitch: 0,
+      pace: 1,
+      loudness: 1,
+      speech_sample_rate: 22050,
+      enable_preprocessing: true,
+      model: 'bulbul:v2'
+    }
+
+    const response = await sarvamClient.textToSpeech.convert({
+      text,
+      target_language_code: targetLanguageCode,
+      ...defaultOptions,
+      ...options
+    })
+
+    console.log('Sarvam AI TTS response received')
+    res.json({
+      audioData: response,
+      targetLanguage: targetLanguageCode
+    })
+  } catch (error) {
+    console.error('TTS error:', error)
+    res.status(500).json({
+      error: `Text-to-speech conversion failed: ${error.message}`
+    })
+  }
+})
+
+// Translate and TTS endpoint
+app.post('/api/translate-tts', async (req, res) => {
+  try {
+    const { text, sourceLanguage = 'en', targetLanguageCode = 'hi-IN', options = {} } = req.body
+
+    if (!text) {
+      return res.status(400).json({ error: 'No text provided' })
+    }
+
+    console.log('Translating and converting to speech...')
+    console.log('Text:', text.substring(0, 100) + '...')
+    console.log('From:', sourceLanguage, 'To:', targetLanguageCode)
+
+    // Step 1: Translate the text
+    const targetLanguage = targetLanguageCode.split('-')[0]
+    const modelNames = ['gemini-1.5-flash', 'gemini-1.5-pro']
+    let translatedText = ''
+
+    for (const modelName of modelNames) {
+      try {
+        console.log(`Trying Gemini model for translation: ${modelName}`)
+        const model = genAI.getGenerativeModel({ model: modelName })
+
+        const prompt = `Translate the following text from ${sourceLanguage} to ${targetLanguage}. 
+        Only provide the translated text without any additional explanations or formatting.
+
+        Text to translate:
+        ${text}
+
+        Translated text:`
+
+        const geminiResult = await model.generateContent(prompt)
+        translatedText = await geminiResult.response.text()
+        console.log(`Translation completed with ${modelName}`)
+        break
+      } catch (error) {
+        console.error(`Translation failed with ${modelName}:`, error.message)
+        continue
+      }
+    }
+
+    if (!translatedText) {
+      return res.status(500).json({
+        error: 'Translation failed for all models'
+      })
+    }
+
+    // Step 2: Convert translated text to speech
+    const defaultOptions = {
+      speaker: 'anushka',
+      pitch: 0,
+      pace: 1,
+      loudness: 1,
+      speech_sample_rate: 22050,
+      enable_preprocessing: true,
+      model: 'bulbul:v2'
+    }
+
+    console.log('Converting translated text to speech...')
+    console.log('Translated text:', translatedText.trim().substring(0, 100) + '...')
+    
+    const ttsResponse = await sarvamClient.textToSpeech.convert({
+      text: translatedText.trim(),
+      target_language_code: targetLanguageCode,
+      ...defaultOptions,
+      ...options
+    })
+
+    console.log('TTS response received:', {
+      hasResponse: !!ttsResponse,
+      hasAudios: !!(ttsResponse && ttsResponse.audios),
+      audioCount: ttsResponse?.audios?.length || 0,
+      requestId: ttsResponse?.request_id
+    })
+    
+    // Check if response has audio data
+    if (ttsResponse && ttsResponse.audios && ttsResponse.audios.length > 0) {
+      const audioData = ttsResponse.audios[0]
+      console.log('Audio data received, length:', audioData?.length || 'unknown')
+      
+      res.json({
+        originalText: text,
+        translatedText: translatedText.trim(),
+        audioData: audioData,
+        requestId: ttsResponse.request_id,
+        sourceLanguage,
+        targetLanguage: targetLanguageCode
+      })
+    } else {
+      console.error('No audio data in TTS response:', ttsResponse)
+      res.status(500).json({
+        error: 'No audio data received from Sarvam AI',
+        response: ttsResponse
+      })
+    }
+  } catch (error) {
+    console.error('Translate-TTS error:', error)
+    console.error('Error stack:', error.stack)
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code
+    })
+    res.status(500).json({
+      error: `Translation and TTS failed: ${error.message}`,
+      details: error.stack
     })
   }
 })
