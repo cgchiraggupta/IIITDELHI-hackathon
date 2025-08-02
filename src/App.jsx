@@ -437,8 +437,8 @@ function App() {
               <div className="action-subtitle">Hands-free operation</div>
             </div>
           </motion.button>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Recent Activity */}
       {reports.length > 0 && (
@@ -499,7 +499,7 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   )
 
   // Render Camera View
@@ -846,7 +846,7 @@ function App() {
           </svg>
           <span>{translate('nav.patients', language)}</span>
         </motion.button>
-      </nav>
+      </motion.nav>
       
       {/* Processing Popup */}
       <ProcessingPopup 
@@ -865,7 +865,7 @@ function App() {
         isVisible={showSuccessNotification}
         onClose={() => setShowSuccessNotification(false)}
       />
-    </div>
+    </motion.div>
   )
 }
 
