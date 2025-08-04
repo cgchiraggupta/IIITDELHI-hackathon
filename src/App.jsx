@@ -141,16 +141,37 @@ function App() {
       // Send to backend API
       const apiUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/analyze`
       console.log('Sending request to:', apiUrl)
+      console.log('Request payload size:', formData.get('file').size, 'bytes')
       
-      const apiResponse = await fetch(apiUrl, {
-        method: 'POST',
-        body: formData
-      })
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 120000) // 2 minute timeout
       
-      if (!apiResponse.ok) {
-        const errorText = await apiResponse.text()
-        console.error('API Error Response:', errorText)
-        throw new Error(`API request failed: ${apiResponse.status} ${apiResponse.statusText} - ${errorText}`)
+      try {
+        const apiResponse = await fetch(apiUrl, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+          headers: {
+            // Don't set Content-Type for FormData, let browser set it
+          }
+        })
+        
+        clearTimeout(timeoutId)
+        
+        console.log('Response status:', apiResponse.status)
+        console.log('Response headers:', Object.fromEntries(apiResponse.headers.entries()))
+        
+        if (!apiResponse.ok) {
+          const errorText = await apiResponse.text()
+          console.error('API Error Response:', errorText)
+          throw new Error(`API request failed: ${apiResponse.status} ${apiResponse.statusText} - ${errorText}`)
+        }
+      } catch (error) {
+        clearTimeout(timeoutId)
+        if (error.name === 'AbortError') {
+          throw new Error('Request timed out after 2 minutes. Please try again.')
+        }
+        throw error
       }
       
       const result = await apiResponse.json()

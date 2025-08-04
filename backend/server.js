@@ -17,9 +17,12 @@ const PORT = process.env.PORT || 3001
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://tdelhi-hackathon.vercel.app', 'https://*.vercel.app'] // Allow your Vercel domain
+    ? ['https://tdelhi-hackathon.vercel.app', 'https://*.vercel.app', 'https://*.railway.app'] // Allow your Vercel domain
     : ['http://localhost:5173', 'http://localhost:3000'],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+  maxAge: 86400 // 24 hours
 }))
 app.use(express.json())
 app.use(express.static(join(__dirname, 'dist')))
@@ -52,6 +55,8 @@ app.post('/api/ocr', upload.single('file'), async (req, res) => {
     }
 
     console.log('Processing file:', req.file.originalname, 'Size:', req.file.size)
+    console.log('Request origin:', req.get('origin'))
+    console.log('Request headers:', req.headers)
 
     // OCR Step
     const ocrFormData = new FormData()
@@ -552,7 +557,27 @@ Action Items: [suggestions for action]`
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' })
+  res.json({ 
+    status: 'ok', 
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  })
+})
+
+// Simple test endpoint for debugging
+app.post('/api/test', upload.single('file'), (req, res) => {
+  console.log('Test endpoint called')
+  console.log('File received:', req.file ? 'Yes' : 'No')
+  console.log('File size:', req.file ? req.file.size : 'No file')
+  console.log('Origin:', req.get('origin'))
+  
+  res.json({ 
+    message: 'Test successful',
+    fileReceived: !!req.file,
+    fileSize: req.file ? req.file.size : 0,
+    timestamp: new Date().toISOString()
+  })
 })
 
 // Serve the React app for all other routes
