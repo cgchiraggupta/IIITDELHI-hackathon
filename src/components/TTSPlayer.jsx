@@ -31,7 +31,12 @@ function TTSPlayer({ text, sourceLanguage = 'en', onTranslationComplete }) {
 
   const handleTranslateAndPlay = async () => {
     if (!text || !text.trim()) {
-      setError('No text to translate')
+      setError('No text available for translation. Please analyze a medical report first.')
+      return
+    }
+
+    if (text.trim().length < 10) {
+      setError('Text is too short to translate. Please ensure the medical report analysis is complete.')
       return
     }
 
@@ -45,7 +50,7 @@ function TTSPlayer({ text, sourceLanguage = 'en', onTranslationComplete }) {
       console.log('Text:', text.substring(0, 100) + '...')
       console.log('Target language:', selectedLanguage)
       
-      const response = await fetch('http://localhost:3001/api/translate-tts', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/translate-tts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

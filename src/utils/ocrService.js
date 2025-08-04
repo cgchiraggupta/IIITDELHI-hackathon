@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // Backend API base URL
-const API_BASE_URL = 'http://localhost:3001'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
 
 /**
  * Extract text from image using backend OCR API
@@ -27,7 +27,13 @@ export async function extractTextWithOCR(imageFile, language = 'eng') {
     return response.data.extractedText
   } catch (error) {
     console.error('OCR extraction error:', error)
-    throw error
+    if (error.response) {
+      throw new Error(`OCR API error: ${error.response.status} - ${error.response.data?.error || error.response.statusText}`)
+    } else if (error.request) {
+      throw new Error('OCR API request failed. Please check if the backend server is running.')
+    } else {
+      throw new Error(`OCR request error: ${error.message}`)
+    }
   }
 }
 
@@ -54,7 +60,13 @@ export async function generateSummaryWithAI(text, language = 'en') {
     return response.data.summary
   } catch (error) {
     console.error('AI summary generation error:', error)
-    throw error
+    if (error.response) {
+      throw new Error(`AI API error: ${error.response.status} - ${error.response.data?.error || error.response.statusText}`)
+    } else if (error.request) {
+      throw new Error('AI API request failed. Please check if the backend server is running.')
+    } else {
+      throw new Error(`AI request error: ${error.message}`)
+    }
   }
 }
 
@@ -82,6 +94,16 @@ export async function processImageWithOCRAndAI(imageFile, language = 'en') {
     return response.data
   } catch (error) {
     console.error('Image processing error:', error)
-    throw error
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      throw new Error(`Server error: ${error.response.status} - ${error.response.data?.error || error.response.statusText}`)
+    } else if (error.request) {
+      // The request was made but no response was received
+      throw new Error('No response from server. Please check if the backend server is running.')
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      throw new Error(`Request setup error: ${error.message}`)
+    }
   }
 } 

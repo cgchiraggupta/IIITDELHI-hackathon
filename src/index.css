@@ -5,34 +5,34 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: dark;
-  color: #FFFFFF; /* White text color */
-  background-color: #111827; /* Deep Space Gray background */
+  color-scheme: light;
+  color: #1e293b; /* Dark text color */
+  background-color: #ffffff; /* White background */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   
-  /* Midnight Health Dark Theme */
-  --color-primary: #1A237E; /* Dark Indigo */
-  --color-primary-dark: #0D47A1; /* Slightly darker indigo */
-  --color-secondary: #26A69A; /* Teal */
-  --color-secondary-dark: #00897B; /* Slightly darker teal */
-  --color-accent: #69F0AE; /* Neon Green */
-  --color-accent-dark: #00E676; /* Slightly darker neon green */
-  --color-background: #111827; /* Deep Space Gray */
-  --color-surface: #1F2937; /* Slightly lighter space gray */
-  --color-text: #FFFFFF; /* White */
-  --color-text-secondary: #B0B0B0; /* Light gray for secondary text */
-  --color-button-primary: #69F0AE; /* Neon Green for CTAs */
-  --color-button-secondary: #26A69A; /* Teal for secondary buttons */
-  --color-warning: #FFB74D;
-  --color-success: #81C784;
-  --color-info: #64B5F6;
-  --color-error: #E57373;
-  --color-gray-300: #374151; /* Adjusted for space gray */
-  --color-gray-100: #1F2937; /* Adjusted for space gray */
+  /* Light Healthcare Theme */
+  --color-primary: #2563eb; /* Blue */
+  --color-primary-dark: #1d4ed8; /* Darker blue */
+  --color-secondary: #10b981; /* Green */
+  --color-secondary-dark: #059669; /* Darker green */
+  --color-accent: #f59e0b; /* Orange */
+  --color-accent-dark: #d97706; /* Darker orange */
+  --color-background: #ffffff; /* White */
+  --color-surface: #f8fafc; /* Light gray */
+  --color-text: #1e293b; /* Dark text */
+  --color-text-secondary: #64748b; /* Medium gray for secondary text */
+  --color-button-primary: #2563eb; /* Blue for CTAs */
+  --color-button-secondary: #10b981; /* Green for secondary buttons */
+  --color-warning: #f59e0b;
+  --color-success: #10b981;
+  --color-info: #3b82f6;
+  --color-error: #ef4444;
+  --color-gray-300: #d1d5db; /* Light gray */
+  --color-gray-100: #f3f4f6; /* Very light gray */
   
   /* Font sizes */
   --font-size-xs: 0.75rem;
@@ -56,10 +56,10 @@
   --radius-xl: 1rem;
   
   /* Shadows */
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 12px 35px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(105, 240, 174, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.2);
 }
 
 body {
@@ -67,8 +67,8 @@ body {
   display: flex;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #111827; /* Deep Space Gray background */
-  color: #FFFFFF; /* White text */
+  background-color: #ffffff; /* White background */
+  color: #1e293b; /* Dark text */
 }
 
 #root {

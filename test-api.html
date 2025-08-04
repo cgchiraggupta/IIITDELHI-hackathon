@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <h1>ASHA Health Assistant API Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Health Check</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <div id="health-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Translation & TTS Test</h2>
+        <button onclick="testTranslationTTS()">Test Translation & TTS</button>
+        <div id="translation-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. OCR Test</h2>
+        <input type="file" id="imageFile" accept="image/*">
+        <button onclick="testOCR()">Test OCR</button>
+        <div id="ocr-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. AI Summary Test</h2>
+        <textarea id="summaryText" rows="4" cols="50" placeholder="Enter text to summarize...">This is a sample medical report text for testing the AI summary functionality.</textarea>
+        <button onclick="testSummary()">Test AI Summary</button>
+        <div id="summary-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('health-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                resultDiv.className = 'result success';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function testTranslationTTS() {
+            const resultDiv = document.getElementById('translation-result');
+            try {
+                const response = await fetch(`${API_BASE}/api/translate-tts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: "Hello world, this is a test of the translation and text-to-speech functionality.",
+                        sourceLanguage: "en",
+                        targetLanguageCode: "hi-IN"
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `Translation: ${data.translatedText}\n\nAudio data received: ${data.audioData ? 'Yes' : 'No'}\n\nFull response: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function testOCR() {
+            const resultDiv = document.getElementById('ocr-result');
+            const fileInput = document.getElementById('imageFile');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please select an image file first.';
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('language', 'eng');
+
+                const response = await fetch(`${API_BASE}/api/ocr`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `Extracted text: ${data.extractedText}\n\nFull response: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function testSummary() {
+            const resultDiv = document.getElementById('summary-result');
+            const text = document.getElementById('summaryText').value;
+            
+            if (!text.trim()) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please enter some text to summarize.';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/summarize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        language: 'en'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `Summary: ${JSON.stringify(data.summary, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html> 
