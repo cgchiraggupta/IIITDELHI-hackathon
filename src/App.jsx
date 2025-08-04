@@ -139,13 +139,18 @@ function App() {
       console.log('Sending to backend API...')
       
       // Send to backend API
-      const apiResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/analyze`, {
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/analyze`
+      console.log('Sending request to:', apiUrl)
+      
+      const apiResponse = await fetch(apiUrl, {
         method: 'POST',
         body: formData
       })
       
       if (!apiResponse.ok) {
-        throw new Error(`API request failed: ${apiResponse.status} ${apiResponse.statusText}`)
+        const errorText = await apiResponse.text()
+        console.error('API Error Response:', errorText)
+        throw new Error(`API request failed: ${apiResponse.status} ${apiResponse.statusText} - ${errorText}`)
       }
       
       const result = await apiResponse.json()

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .loading { border-color: #ffc107; background: #fff3cd; }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Backend Connection Test</h1>
+        <p>This will help you test if your backend is accessible from your deployed frontend.</p>
+        
+        <div class="test-section">
+            <h3>Step 1: Enter Your Backend URL</h3>
+            <input type="text" id="backendUrl" placeholder="https://your-app.railway.app" value="https://">
+            <button onclick="testBackend()">Test Backend Connection</button>
+            <div id="backendResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Step 2: Test API Endpoints</h3>
+            <button onclick="testHealth()">Test Health Endpoint</button>
+            <button onclick="testCORS()">Test CORS</button>
+            <div id="apiResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Step 3: Environment Variables</h3>
+            <div id="envResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId)
+            const timestamp = new Date().toLocaleTimeString()
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'loading'
+            
+            element.className = `result ${className}`
+            element.textContent += `[${timestamp}] ${message}\n`
+        }
+
+        async function testBackend() {
+            const backendUrl = document.getElementById('backendUrl').value
+            const resultDiv = document.getElementById('backendResult')
+            resultDiv.textContent = ''
+            
+            if (!backendUrl) {
+                log('backendResult', '❌ Please enter a backend URL', 'error')
+                return
+            }
+            
+            log('backendResult', `🔍 Testing connection to: ${backendUrl}`)
+            
+            try {
+                const response = await fetch(`${backendUrl}/api/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                
+                if (response.ok) {
+                    const data = await response.json()
+                    log('backendResult', `✅ Backend is accessible!`, 'success')
+                    log('backendResult', `Response: ${JSON.stringify(data, null, 2)}`, 'success')
+                } else {
+                    log('backendResult', `❌ Backend responded with status: ${response.status}`, 'error')
+                }
+            } catch (error) {
+                log('backendResult', `❌ Connection failed: ${error.message}`, 'error')
+                log('backendResult', '💡 Make sure your backend is deployed and the URL is correct', 'error')
+            }
+        }
+
+        async function testHealth() {
+            const backendUrl = document.getElementById('backendUrl').value
+            const resultDiv = document.getElementById('apiResult')
+            resultDiv.textContent = ''
+            
+            if (!backendUrl) {
+                log('apiResult', '❌ Please enter a backend URL first', 'error')
+                return
+            }
+            
+            log('apiResult', '🏥 Testing health endpoint...')
+            
+            try {
+                const response = await fetch(`${backendUrl}/api/health`)
+                const data = await response.json()
+                
+                if (response.ok) {
+                    log('apiResult', `✅ Health check passed!`, 'success')
+                    log('apiResult', `Status: ${data.status}`, 'success')
+                } else {
+                    log('apiResult', `❌ Health check failed: ${response.status}`, 'error')
+                }
+            } catch (error) {
+                log('apiResult', `❌ Health check error: ${error.message}`, 'error')
+            }
+        }
+
+        async function testCORS() {
+            const backendUrl = document.getElementById('backendUrl').value
+            const resultDiv = document.getElementById('apiResult')
+            resultDiv.textContent = ''
+            
+            if (!backendUrl) {
+                log('apiResult', '❌ Please enter a backend URL first', 'error')
+                return
+            }
+            
+            log('apiResult', '🌐 Testing CORS configuration...')
+            
+            try {
+                const response = await fetch(`${backendUrl}/api/health`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'GET',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                })
+                
+                log('apiResult', `✅ CORS preflight successful!`, 'success')
+                log('apiResult', `Access-Control-Allow-Origin: ${response.headers.get('Access-Control-Allow-Origin')}`, 'success')
+            } catch (error) {
+                log('apiResult', `❌ CORS test failed: ${error.message}`, 'error')
+            }
+        }
+
+        function checkEnvironment() {
+            const resultDiv = document.getElementById('envResult')
+            resultDiv.textContent = ''
+            
+            log('envResult', '🔍 Checking environment variables...')
+            
+            // Check if we're in a Vite environment
+            if (typeof import !== 'undefined' && import.meta) {
+                log('envResult', '✅ Vite environment detected', 'success')
+                log('envResult', `VITE_API_BASE_URL: ${import.meta.env.VITE_API_BASE_URL || 'Not set'}`, 'info')
+            } else {
+                log('envResult', '⚠️ Not in Vite environment (this is normal for this test page)', 'info')
+            }
+            
+            log('envResult', `Current origin: ${window.location.origin}`, 'info')
+            log('envResult', `User agent: ${navigator.userAgent.substring(0, 50)}...`, 'info')
+        }
+
+        // Run environment check on load
+        checkEnvironment()
+    </script>
+</body>
+</html> 
